@@ -1,10 +1,11 @@
 -- Creates TASK_REFRESH_GAP_QUEUE: scheduled sweep inserting stale/gap/overdue docs into the review queue
 -- Co-authored with CoCo
 
-USE ROLE ROLE_SCHEMA_HEALTHCARE_KNOWLEDGE;
-USE DATABASE DB_SNOWFLAKE_ENTERPRISE_AGENTS_HCLS;
-USE SCHEMA SCHEMA_HEALTHCARE_KNOWLEDGE;
-USE WAREHOUSE WH_HCLS_XS;
+USE ROLE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_ROLE;
+USE WAREHOUSE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_WH;
+
+USE DATABASE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB;
+-- USE SCHEMA SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB.CURATED;
 
 -- =============================================================================
 -- TASK_REFRESH_GAP_QUEUE
@@ -20,15 +21,15 @@ DECLARE
     v_sql      VARCHAR;
 BEGIN
     SELECT CONFIG_VALUE INTO :v_schedule
-    FROM DB_SNOWFLAKE_ENTERPRISE_AGENTS_HCLS.SCHEMA_HEALTHCARE_KNOWLEDGE.KA_CONFIG
+    FROM SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB.CONFIG.KA_CONFIG
     WHERE CONFIG_KEY = 'gap_queue_sweep_schedule';
 
     v_sql := '
         CREATE OR REPLACE TASK TASK_REFRESH_GAP_QUEUE
-            WAREHOUSE = WH_HCLS_XS
+            WAREHOUSE = SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_WH
             SCHEDULE  = ''' || v_schedule || '''
         AS
-            INSERT INTO HITL_TBL_REVIEW_QUEUE
+            INSERT INTO CURATED.HITL_TBL_REVIEW_QUEUE
                 (TRIGGER_TYPE, DOC_REF_KEY, REASON_CODE, RISK_LEVEL, STATUS, ASSIGNED_OWNER)
             SELECT
                 CASE
@@ -45,7 +46,7 @@ BEGIN
                 END,
                 ''Open'',
                 NULL
-            FROM CURATED_VW_KNOWLEDGE_COVERAGE_MATRIX
+            FROM ANALYTICS.ANALYTICS_VW_KNOWLEDGE_COVERAGE_MATRIX
             WHERE (COVERAGE_HEALTH IN (''Stale'', ''Gap Detected'') OR REVIEW_STATUS = ''Overdue'')
               AND DOC_REF_KEY NOT IN (
                   SELECT DOC_REF_KEY FROM HITL_TBL_REVIEW_QUEUE
@@ -59,4 +60,5 @@ END;
 -- VERIFICATION
 -- =============================================================================
 SHOW TASKS LIKE 'TASK_REFRESH_GAP_QUEUE';
+
 -- Expected: one row, state = suspended, schedule = 'USING CRON 0 6 * * * UTC'

@@ -1,0 +1,69 @@
+tools:
+  - tool_spec:
+      type: cortex_analyst_text_to_sql
+      name: DataTool1
+      description: "<What structured data domain #1 this queries — tables, metrics, filters.>"
+  - tool_spec:
+      type: cortex_analyst_text_to_sql
+      name: DataTool2
+      description: "<What structured data domain #2 this queries — tables, metrics, filters.>"
+  - tool_spec:
+      type: cortex_search
+      name: DocSearch
+      description: "<What documents or policies this searches — knowledge base, runbooks, guidelines.>"
+  - tool_spec:
+      type: generic
+      name: ActionTool
+      description: "<What this procedure computes or triggers and when to invoke it.>"
+      input_schema:
+        type: object
+        properties:
+          param_1:
+            type: string
+            description: "<What this parameter controls>"
+          param_2:
+            type: string
+            description: "<What this parameter controls>"
+        required:
+          - param_1
+
+tool_resources:
+  DataTool1:
+    execution_environment:
+      type: warehouse
+      warehouse: <WAREHOUSE>
+    semantic_view: <DATABASE>.<SCHEMA>.<SEMANTIC_VIEW_1>
+
+  DataTool2:
+    execution_environment:
+      type: warehouse
+      warehouse: <WAREHOUSE>
+    semantic_view: <DATABASE>.<SCHEMA>.<SEMANTIC_VIEW_2>
+
+  DocSearch:
+    cortex_search_service: <DATABASE>.<SCHEMA>.<SEARCH_SERVICE>
+    id_column: <ID_COLUMN>
+    title_column: <TITLE_COLUMN>
+    max_results: 5
+
+  ActionTool:
+    type: procedure
+    identifier: <DATABASE>.<SCHEMA>.<PROCEDURE_NAME>
+    execution_environment:
+      type: warehouse
+      warehouse: <WAREHOUSE>
+
+instructions:
+  response: |
+    You are a healthcare knowledge assistant for the organization.
+    You answer data questions across multiple domains, search documents and policies,
+    and can trigger actions via stored procedures.
+    For actions, always confirm the parameters and result with the user.
+  orchestration: |
+    Use DataTool1 for questions about data domain #1: counts, averages, trends,
+    comparisons, and lookups.
+    Use DataTool2 for questions about data domain #2.
+    Use DocSearch when the user asks about policies, guidelines, documentation,
+    or wants to look up knowledge base articles.
+    Use ActionTool when the user asks to trigger a process, run a computation,
+    create a record, or perform an action — not for querying existing data.

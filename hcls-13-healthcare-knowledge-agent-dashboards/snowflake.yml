@@ -19,12 +19,12 @@ entities:
   streamlit_app:
     type: streamlit
     identifier:
-      database: DB_SNOWFLAKE_ENTERPRISE_AGENTS_HCLS
-      schema: SCHEMA_HEALTHCARE_KNOWLEDGE
-      name: HEALTHCARE_KNOWLEDGE_DASHBOARD
+      database: SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB
+      schema: ANALYTICS
+      name: Heathcare Knowledge Agent Streamlit App
     title: healthcare-knowledge-dashboard
-    query_warehouse: WH_HCLS_XS
-    compute_pool: SYSTEM_COMPUTE_POOL_CPU
+    query_warehouse: SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_WH
+    compute_pool: ARIS_EXEC_POOL
     run_mode: SpcsOnly
     execute_as: OWNER
     main_file: streamlit_app.py

@@ -4,10 +4,11 @@
 ----------------------------------------------------------------------
 -- 6a. Session context
 ----------------------------------------------------------------------
-USE ROLE ROLE_SCHEMA_HEALTHCARE_KNOWLEDGE;
-USE DATABASE DB_SNOWFLAKE_ENTERPRISE_AGENTS_HCLS;
-USE SCHEMA SCHEMA_HEALTHCARE_KNOWLEDGE;
-USE WAREHOUSE WH_HCLS_XS;
+USE ROLE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_ROLE;
+USE WAREHOUSE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_WH;
+
+USE DATABASE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB;
+USE SCHEMA SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB.SEMANTICS;
 
 ----------------------------------------------------------------------
 -- 6b. RETRIEVAL TEST 1: MRSA contact precautions
@@ -57,7 +58,7 @@ SELECT
 
 ----------------------------------------------------------------------
 -- 6e. GAP QUERY 1: Documents expired or past review date
---     (Plain SQL on KA_DOC_METADATA — NOT the search service)
+--     (Plain SQL on CURATED.KA_DOC_METADATA — NOT the search service)
 ----------------------------------------------------------------------
 SELECT
     DOC_ID,
@@ -71,7 +72,7 @@ SELECT
         WHEN EXPIRY_DATE < CURRENT_DATE() THEN 'PAST EXPIRY'
         WHEN REVIEW_DATE < CURRENT_DATE() THEN 'PAST REVIEW DATE'
     END AS GAP_REASON
-FROM KA_DOC_METADATA
+FROM CURATED.KA_DOC_METADATA
 WHERE STATUS = 'EXPIRED'
    OR EXPIRY_DATE < CURRENT_DATE()
    OR REVIEW_DATE < CURRENT_DATE()
@@ -87,7 +88,7 @@ SELECT
     DATEDIFF('day', CURRENT_DATE(), EXPIRY_DATE) AS DAYS_UNTIL_EXPIRY,
     DOCUMENT_OWNER,
     DEPARTMENT_SCOPE
-FROM KA_DOC_METADATA
+FROM CURATED.KA_DOC_METADATA
 WHERE EXPIRY_DATE BETWEEN CURRENT_DATE() AND DATEADD('day', 30, CURRENT_DATE())
   AND STATUS != 'EXPIRED'
 ORDER BY EXPIRY_DATE;

@@ -4,14 +4,22 @@ import os
 import json
 import streamlit as st
 st.set_page_config(page_title="Healthcare Knowledge Agent", layout="wide")
+
+
+
+
 # ---------------------------------------------------------------------------
 # Connection & session
 # ---------------------------------------------------------------------------
 conn = st.connection("snowflake", ttl=os.getenv("SNOWFLAKE_CONNECTION_TTL"))
 session = conn.session()
-DB_SCHEMA = "DB_SNOWFLAKE_ENTERPRISE_AGENTS_HCLS.SCHEMA_HEALTHCARE_KNOWLEDGE"
-AGENT_FQN = "DB_SNOWFLAKE_ENTERPRISE_AGENTS_HCLS.SCHEMA_HEALTHCARE_KNOWLEDGE.KA_KNOWLEDGE_AGENT"
+DB_SCHEMA = "SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB.ANALYTICS"
+AGENT_FQN = "SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB.GEN_AGENTIC_AI.KA_KNOWLEDGE_AGENT"
 current_role = session.sql("SELECT CURRENT_ROLE()").collect()[0][0]
+
+
+
+
 # ---------------------------------------------------------------------------
 # Cortex Agent call helper — SQL-based (DATA_AGENT_RUN), single-turn + threads
 # ---------------------------------------------------------------------------
@@ -51,6 +59,10 @@ def call_knowledge_agent(user_text: str) -> str:
     else:
         agent_text = str(data)
     return agent_text
+
+
+
+
 # ---------------------------------------------------------------------------
 # Session state init
 # ---------------------------------------------------------------------------
@@ -62,17 +74,25 @@ if "thread_id" not in st.session_state:
     st.session_state["thread_id"] = None
 if "parent_message_id" not in st.session_state:
     st.session_state["parent_message_id"] = None
+
+
+
+
 # ---------------------------------------------------------------------------
 # Role-gated tab list
 # ---------------------------------------------------------------------------
-PRIVILEGED_ROLES = ("ROLE_HK_COMPLIANCE_LEAD", "ROLE_HK_ADMIN", "ACCOUNTADMIN")
-AGENT_ROLES = ("ROLE_HK_EXEC_VIEWER", "ROLE_HK_COMPLIANCE_LEAD", "ROLE_HK_ADMIN", "ACCOUNTADMIN")
+PRIVILEGED_ROLES = ("ROLE_HK_COMPLIANCE_LEAD", "ROLE_HK_ADMIN", "ACCOUNTADMIN", "SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_ROLE")
+AGENT_ROLES = ("ROLE_HK_EXEC_VIEWER", "ROLE_HK_COMPLIANCE_LEAD", "ROLE_HK_ADMIN", "ACCOUNTADMIN", "SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_ROLE")
 tab_labels = ["Knowledge Gap & Review Queue", "Content Review Detail"]
 if current_role in PRIVILEGED_ROLES:
     tab_labels.append("Compliance & Protocol Oversight")
 if current_role in AGENT_ROLES:
     tab_labels.append("Cortex Agent Conversational Panel")
 tabs = st.tabs(tab_labels)
+
+
+
+
 # ---------------------------------------------------------------------------
 # Screen 1 — Knowledge Gap & Review Queue
 # ---------------------------------------------------------------------------
@@ -119,6 +139,10 @@ with tabs[0]:
         st.info("No items match the current filters.")
     else:
         st.warning("Select at least one Status and one Risk Level to view the queue.")
+
+
+
+
 # ---------------------------------------------------------------------------
 # Screen 2 — Content Review Detail
 # ---------------------------------------------------------------------------
@@ -194,6 +218,10 @@ with tabs[1]:
                         st.rerun()
                     except Exception as e:
                         st.error(f"Write failed: {e}")
+
+
+
+
 # ---------------------------------------------------------------------------
 # Screen 3 — Compliance & Protocol Oversight (role-gated)
 # ---------------------------------------------------------------------------

@@ -1,10 +1,11 @@
 -- Resumes and executes the Gap Queue & Escalation task graph (child-first pattern)
 -- Co-authored with CoCo
 
-USE ROLE ROLE_SCHEMA_HEALTHCARE_KNOWLEDGE;
-USE DATABASE DB_SNOWFLAKE_ENTERPRISE_AGENTS_HCLS;
-USE SCHEMA SCHEMA_HEALTHCARE_KNOWLEDGE;
-USE WAREHOUSE WH_HCLS_XS;
+USE ROLE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_ROLE;
+USE WAREHOUSE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_WH;
+
+USE DATABASE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB;
+USE SCHEMA SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB.CURATED;
 
 -- =============================================================================
 -- TASK GRAPH: Gap Queue & Escalation Pipeline
@@ -21,27 +22,44 @@ USE WAREHOUSE WH_HCLS_XS;
 -- STEP 1: DESCRIBE ALL TASKS
 -- =============================================================================
 
+-- [ PARENT TASK ]
 DESCRIBE TASK TASK_REFRESH_GAP_QUEUE;
+
+-- [ CHILD TASK ]
 DESCRIBE TASK TASK_ESCALATE_STALE_REVIEWS;
 
 -- =============================================================================
 -- STEP 2: SUSPEND ROOT (required to re-commit graph version)
 -- =============================================================================
 
+-- SUSPENDING RULE:
+-- PARENT TO CHILD
+
 ALTER TASK TASK_REFRESH_GAP_QUEUE SUSPEND;
+
+ALTER TASK TASK_ESCALATE_STALE_REVIEWS SUSPEND;
 
 -- =============================================================================
 -- STEP 3: RESUME CHILD FIRST, THEN ROOT
 -- =============================================================================
 
+-- RESUMING RULES
+-- CHILD TO PARENT
+
+-- [ CHILD TASK ]
 ALTER TASK TASK_ESCALATE_STALE_REVIEWS RESUME;
+
+-- [ PARENT TASK ]
 ALTER TASK TASK_REFRESH_GAP_QUEUE RESUME;
 
 -- =============================================================================
 -- STEP 4: VERIFY BOTH TASKS ARE STARTED
 -- =============================================================================
 
+-- [ PARENT TASK ]
 SHOW TASKS LIKE 'TASK_REFRESH_GAP_QUEUE' IN SCHEMA;
+
+-- [ CHILD TASK ]
 SHOW TASKS LIKE 'TASK_ESCALATE_STALE_REVIEWS' IN SCHEMA;
 
 -- =============================================================================

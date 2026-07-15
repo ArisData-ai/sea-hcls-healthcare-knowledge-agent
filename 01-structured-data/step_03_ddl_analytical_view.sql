@@ -4,17 +4,18 @@
 -- These are standard views — no additional storage cost.
 -- =============================================================================
 
-USE ROLE ROLE_SCHEMA_HEALTHCARE_KNOWLEDGE;
-USE DATABASE DB_SNOWFLAKE_ENTERPRISE_AGENTS_HCLS;
-USE SCHEMA SCHEMA_HEALTHCARE_KNOWLEDGE;
-USE WAREHOUSE WH_HCLS_XS;
+USE ROLE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_ROLE;
+USE WAREHOUSE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_WH;
+
+USE DATABASE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB;
+USE SCHEMA SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB.ANALYTICS;
 
 -- ----------------------------------------------------------------------------
--- 3.1  CURATED_VW_PROTOCOL_CURRENCY
+-- 3.1  ANALYTICS_VW_PROTOCOL_CURRENCY
 --      Classifies every clinical protocol by age and freshness status,
 --      computing days since last review and days until next review is due.
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE VIEW CURATED_VW_PROTOCOL_CURRENCY AS
+CREATE OR REPLACE VIEW ANALYTICS_VW_PROTOCOL_CURRENCY AS
 SELECT
     p.PROTOCOL_ID,
     p.PROTOCOL_CODE,
@@ -47,17 +48,17 @@ SELECT
     END                                                       AS ADHERENCE_TIER,
     d.DOC_TITLE                                               AS LINKED_DOCUMENT_TITLE,
     d.SOURCE_SYSTEM                                           AS DOCUMENT_SOURCE
-FROM CURATED_TBL_CLINICAL_PROTOCOLS p
-LEFT JOIN CURATED_TBL_DOCUMENTS d
+FROM CURATED.CURATED_TBL_CLINICAL_PROTOCOLS p
+LEFT JOIN CURATED.CURATED_TBL_DOCUMENTS d
     ON p.LINKED_DOC_REF_KEY = d.DOC_REF_KEY;
 
 
 -- ----------------------------------------------------------------------------
--- 3.2  CURATED_VW_COMPLIANCE_GAP_SUMMARY
+-- 3.2  ANALYTICS_VW_COMPLIANCE_GAP_SUMMARY
 --      Aggregates compliance findings by regulation body, requirement, and
 --      severity; surfaces open risk exposure in USD and count.
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE VIEW CURATED_VW_COMPLIANCE_GAP_SUMMARY AS
+CREATE OR REPLACE VIEW ANALYTICS_VW_COMPLIANCE_GAP_SUMMARY AS
 SELECT
     r.REGULATION_BODY,
     r.REGULATION_NAME,
@@ -80,18 +81,18 @@ SELECT
              ELSE NULL END)                                   AS AVG_DAYS_TO_RESOLVE,
     MAX(f.FINDING_DATE)                                       AS MOST_RECENT_FINDING_DATE,
     MIN(f.REMEDIATION_DUE_DATE)                               AS EARLIEST_OPEN_DUE_DATE
-FROM CURATED_TBL_COMPLIANCE_FINDINGS f
-JOIN CURATED_TBL_REGULATORY_REQUIREMENTS r
+FROM CURATED.CURATED_TBL_COMPLIANCE_FINDINGS f
+JOIN CURATED.CURATED_TBL_REGULATORY_REQUIREMENTS r
     ON f.REQUIREMENT_ID = r.REQUIREMENT_ID
 GROUP BY ALL;
 
 
 -- ----------------------------------------------------------------------------
--- 3.3  CURATED_VW_QUERY_RESOLUTION_METRICS
+-- 3.3  ANALYTICS_VW_QUERY_RESOLUTION_METRICS
 --      Computes query resolution KPIs by persona, org type, content domain,
 --      and month — the operational health layer of the Knowledge Agent.
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE VIEW CURATED_VW_QUERY_RESOLUTION_METRICS AS
+CREATE OR REPLACE VIEW ANALYTICS_VW_QUERY_RESOLUTION_METRICS AS
 SELECT
     DATE_TRUNC('month', q.QUERY_DATE)                         AS QUERY_MONTH,
     q.ROLE_CODE,
@@ -121,19 +122,19 @@ SELECT
     ROUND(
         SUM(CASE WHEN q.ANSWER_CONFIDENCE = 'High' THEN 1 ELSE 0 END) * 100.0
         / NULLIF(COUNT(*), 0), 1)                             AS HIGH_CONFIDENCE_PCT
-FROM CURATED_TBL_KNOWLEDGE_QUERIES q
-JOIN CURATED_TBL_STAFF_ROLES sr
+FROM CURATED.CURATED_TBL_KNOWLEDGE_QUERIES q
+JOIN CURATED.CURATED_TBL_STAFF_ROLES sr
     ON q.ROLE_CODE = sr.ROLE_CODE
 GROUP BY ALL;
 
 
 -- ----------------------------------------------------------------------------
--- 3.4  CURATED_VW_KNOWLEDGE_COVERAGE_MATRIX
+-- 3.4  ANALYTICS_VW_KNOWLEDGE_COVERAGE_MATRIX
 --      Maps every document in the knowledge base to its content health:
 --      recency, coverage completeness, query demand, and gap status.
 --      Feeds the Knowledge Gap Detection capability of the agent.
 -- ----------------------------------------------------------------------------
-CREATE OR REPLACE VIEW CURATED_VW_KNOWLEDGE_COVERAGE_MATRIX AS
+CREATE OR REPLACE VIEW ANALYTICS_VW_KNOWLEDGE_COVERAGE_MATRIX AS
 SELECT
     d.DOC_REF_KEY,
     d.DOC_TITLE,
@@ -168,7 +169,7 @@ SELECT
         WHEN d.NEXT_REVIEW_DATE < CURRENT_DATE()              THEN 'Stale'
         ELSE 'Healthy'
     END                                                       AS COVERAGE_HEALTH
-FROM CURATED_TBL_DOCUMENTS d
-LEFT JOIN CURATED_TBL_KNOWLEDGE_QUERIES q
+FROM CURATED.CURATED_TBL_DOCUMENTS d
+LEFT JOIN CURATED.CURATED_TBL_KNOWLEDGE_QUERIES q
     ON d.DOC_REF_KEY = q.RESOLVED_DOC_REF_KEY
 GROUP BY ALL;

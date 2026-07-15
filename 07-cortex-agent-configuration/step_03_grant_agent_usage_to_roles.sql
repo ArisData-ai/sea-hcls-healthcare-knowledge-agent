@@ -17,16 +17,19 @@
 -- It does NOT need USAGE on the agent — it is not a consumer of the agent.
 --------------------------------------------------------------------------------
 
-USE ROLE ROLE_SCHEMA_HEALTHCARE_KNOWLEDGE;
-USE DATABASE DB_SNOWFLAKE_ENTERPRISE_AGENTS_HCLS;
-USE SCHEMA SCHEMA_HEALTHCARE_KNOWLEDGE;
-USE WAREHOUSE WH_HCLS_XS;
+USE ROLE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_ROLE;
+USE WAREHOUSE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_WH;
+
+USE DATABASE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB;
+USE SCHEMA SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB.GEN_AGENTIC_AI;
 
 --------------------------------------------------------------------------------
 -- Grant USAGE on the agent to the two consuming roles
 --------------------------------------------------------------------------------
 GRANT USAGE ON AGENT KA_KNOWLEDGE_AGENT TO ROLE ROLE_HK_EXEC_VIEWER;
 GRANT USAGE ON AGENT KA_KNOWLEDGE_AGENT TO ROLE ROLE_HK_COMPLIANCE_LEAD;
+GRANT USAGE ON AGENT KA_KNOWLEDGE_AGENT TO ROLE ROLE_HK_CLINICIAN_VIEWER;
+GRANT USAGE ON AGENT KA_KNOWLEDGE_AGENT TO ROLE ROLE_HK_CORTEX_AGENT_ANALYST;
 
 --------------------------------------------------------------------------------
 -- VERIFICATION

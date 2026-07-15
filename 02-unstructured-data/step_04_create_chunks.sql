@@ -4,10 +4,12 @@
 ----------------------------------------------------------------------
 -- 4a. Session context
 ----------------------------------------------------------------------
-USE ROLE ROLE_SCHEMA_HEALTHCARE_KNOWLEDGE;
-USE DATABASE DB_SNOWFLAKE_ENTERPRISE_AGENTS_HCLS;
-USE SCHEMA SCHEMA_HEALTHCARE_KNOWLEDGE;
-USE WAREHOUSE WH_HCLS_XS;
+USE ROLE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_ROLE;
+USE WAREHOUSE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_WH;
+
+USE DATABASE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB;
+USE SCHEMA SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB.CURATED;
+
 
 ----------------------------------------------------------------------
 -- 4b. Create chunks table
@@ -26,6 +28,8 @@ CREATE OR REPLACE TABLE KA_DOC_CHUNKS (
     EFFECTIVE_DATE      DATE,
     EXPIRY_DATE         DATE
 );
+
+
 ----------------------------------------------------------------------
 -- 4c. Split raw text into chunks (~1800 chars, 300 overlap) and join metadata
 ----------------------------------------------------------------------

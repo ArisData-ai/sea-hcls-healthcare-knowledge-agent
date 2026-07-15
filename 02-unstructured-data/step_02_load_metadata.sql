@@ -4,10 +4,11 @@
 ----------------------------------------------------------------------
 -- 2a. Session context
 ----------------------------------------------------------------------
-USE ROLE ROLE_SCHEMA_HEALTHCARE_KNOWLEDGE;
-USE DATABASE DB_SNOWFLAKE_ENTERPRISE_AGENTS_HCLS;
-USE SCHEMA SCHEMA_HEALTHCARE_KNOWLEDGE;
-USE WAREHOUSE WH_HCLS_XS;
+USE ROLE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_ROLE;
+USE WAREHOUSE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_WH;
+
+USE DATABASE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB;
+USE SCHEMA SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB.CURATED;
 
 ----------------------------------------------------------------------
 -- 2b. Create metadata table
@@ -16,6 +17,7 @@ CREATE OR REPLACE TABLE KA_DOC_METADATA (
     DOC_ID              VARCHAR(50)   NOT NULL,
     DOCUMENT_NAME       VARCHAR(500)  NOT NULL,
     RELATIVE_PATH       VARCHAR(500)  NOT NULL,
+    FORMAT              VARCHAR(50),
     CONTENT_TYPE        VARCHAR(100),
     FACILITY_SCOPE      VARCHAR(200),
     DEPARTMENT_SCOPE    VARCHAR(200),
@@ -39,7 +41,7 @@ FILE_FORMAT = (
     SKIP_HEADER = 1
     FIELD_OPTIONALLY_ENCLOSED_BY = '"'
     EMPTY_FIELD_AS_NULL = TRUE
-    NULL_IF = ('', 'NULL')
+    NULL_IF = ('', 'NULL', 'None')
 );
 
 ----------------------------------------------------------------------

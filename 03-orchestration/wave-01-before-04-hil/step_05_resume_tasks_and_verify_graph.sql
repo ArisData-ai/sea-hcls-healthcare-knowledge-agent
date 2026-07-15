@@ -4,15 +4,23 @@
 ----------------------------------------------------------------------
 -- 5a. Session context
 ----------------------------------------------------------------------
-USE ROLE ROLE_SCHEMA_HEALTHCARE_KNOWLEDGE;
-USE DATABASE DB_SNOWFLAKE_ENTERPRISE_AGENTS_HCLS;
-USE SCHEMA SCHEMA_HEALTHCARE_KNOWLEDGE;
-USE WAREHOUSE WH_HCLS_XS;
+USE ROLE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_ROLE;
+USE WAREHOUSE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_WH;
+
+USE DATABASE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB;
+USE SCHEMA SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB.CURATED;
 
 ----------------------------------------------------------------------
 -- 5b. Resume tasks — child first, then root
 ----------------------------------------------------------------------
+
+-- Parsing  happens First,
+-- Chunking happens Later
+
+-- [ CHILD TASK ]
 ALTER TASK TASK_CHUNK_NEW_DOCS RESUME;
+
+-- [ PARENT TASK ]
 ALTER TASK TASK_PARSE_NEW_DOCS RESUME;
 
 ----------------------------------------------------------------------

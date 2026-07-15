@@ -4,10 +4,11 @@
 ----------------------------------------------------------------------
 -- 3a. Session context
 ----------------------------------------------------------------------
-USE ROLE ROLE_SCHEMA_HEALTHCARE_KNOWLEDGE;
-USE DATABASE DB_SNOWFLAKE_ENTERPRISE_AGENTS_HCLS;
-USE SCHEMA SCHEMA_HEALTHCARE_KNOWLEDGE;
-USE WAREHOUSE WH_HCLS_XS;
+USE ROLE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_ROLE;
+USE WAREHOUSE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_WH;
+
+USE DATABASE SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB;
+USE SCHEMA SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB.CURATED;
 
 ----------------------------------------------------------------------
 -- 3b. Create HITL_VW_REVIEW_QUEUE_PRIORITIZED
@@ -16,7 +17,10 @@ USE WAREHOUSE WH_HCLS_XS;
 --     applies a deterministic priority sort: risk level first (Critical
 --     > High > Medium > Low), then oldest items surface next.
 ----------------------------------------------------------------------
-CREATE OR REPLACE VIEW HITL_VW_REVIEW_QUEUE_PRIORITIZED AS
+CREATE OR REPLACE VIEW 
+    ANALYTICS
+    .HITL_VW_REVIEW_QUEUE_PRIORITIZED 
+AS
 SELECT
     q.QUEUE_ID,
     q.TRIGGER_TYPE,
@@ -35,8 +39,8 @@ SELECT
     DATEDIFF('day', q.CREATED_AT, CURRENT_TIMESTAMP()) AS AGE_DAYS,
     q.CREATED_AT,
     q.LAST_UPDATED_AT
-FROM HITL_TBL_REVIEW_QUEUE q
-LEFT JOIN CURATED_TBL_DOCUMENTS d
+FROM CURATED.HITL_TBL_REVIEW_QUEUE q
+LEFT JOIN CURATED.CURATED_TBL_DOCUMENTS d
     ON q.DOC_REF_KEY = d.DOC_REF_KEY
 WHERE q.STATUS != 'Closed'
 ORDER BY
@@ -55,4 +59,4 @@ ORDER BY
 -- Expect: 17 columns listed (QUEUE_ID through LAST_UPDATED_AT including
 -- DOC_TITLE, CONTENT_DOMAIN, OWNING_DEPARTMENT, AGE_DAYS).
 -- Zero rows returned since the queue is empty — that's correct at this step.
-DESCRIBE VIEW HITL_VW_REVIEW_QUEUE_PRIORITIZED;
+DESCRIBE VIEW ANALYTICS.HITL_VW_REVIEW_QUEUE_PRIORITIZED;

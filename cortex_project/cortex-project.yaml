@@ -1,0 +1,7 @@
+version: 1
+artifacts:
+  - path: KA_KNOWLEDGE_AGENT.agent.yaml
+    type: cortex_agent
+    targets:
+      default:
+        object: SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB.GEN_AGENTIC_AI.KA_KNOWLEDGE_AGENT
