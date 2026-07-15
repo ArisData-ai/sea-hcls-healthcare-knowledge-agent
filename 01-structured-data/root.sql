@@ -1,0 +1,12 @@
+-- =============================================================================
+-- Healthcare Knowledge Agent — Structured Data Layer
+-- Purpose : Extend the existing Cortex Search (RAG) agent with a Cortex Analyst
+--           tool, enabling both unstructured retrieval AND structured analytics.
+-- Schema  : Single schema pattern — all objects share one schema; prefixes
+--           (CURATED_, AI_BI_) substitute for multi-schema separation.
+-- Object types used:
+--   TBL_   = Transient table (cost-effective; no Fail-Safe overhead)
+--   VW_    = Standard view (derived metrics, no storage cost)
+--   AI_BI_ = Semantic view prefix consumed by Cortex Analyst service
+-- Sequence: Base tables first, then dependent tables, then views.
+-- =============================================================================
