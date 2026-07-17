@@ -1,32 +1,10 @@
-# definition_version: 2
-# entities:
-#   streamlit_app:
-#     type: streamlit
-#     main_file: streamlit_app.py
-#     title: "hcls-13-healthcare-knowledge-agent-dashboards"
-#     query_warehouse: "SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_WH"
-#     compute_pool: "ARIS_EXEC_POOL"
-#     artifacts:
-#       - pyproject.toml
-#       - streamlit_app.py
-#       - .streamlit/config.toml
-
 # created-by: streamlit-in-workspaces; skill-version=1.0.0
-
-
-definition_version: 2
+definition_version: 3
 entities:
   streamlit_app:
     type: streamlit
-    identifier:
-      database: SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB
-      schema: ANALYTICS
-      name: Heathcare Knowledge Agent Streamlit App
-    title: healthcare-knowledge-dashboard
     query_warehouse: SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_WH
-    compute_pool: ARIS_EXEC_POOL
-    run_mode: SpcsOnly
-    execute_as: OWNER
+    compute_pool: SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_COMPUTE_POOL
     main_file: streamlit_app.py
     artifacts:
       - pyproject.toml

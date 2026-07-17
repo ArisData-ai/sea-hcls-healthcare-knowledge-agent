@@ -13,7 +13,7 @@ st.set_page_config(page_title="Healthcare Knowledge Agent", layout="wide")
 # ---------------------------------------------------------------------------
 conn = st.connection("snowflake", ttl=os.getenv("SNOWFLAKE_CONNECTION_TTL"))
 session = conn.session()
-DB_SCHEMA = "SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB.ANALYTICS"
+# DB_SCHEMA = "SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB.ANALYTICS"
 AGENT_FQN = "SEA_HEALTHCARE_KNOWLEDGE_AGENT_OWNER_DB.GEN_AGENTIC_AI.KA_KNOWLEDGE_AGENT"
 current_role = session.sql("SELECT CURRENT_ROLE()").collect()[0][0]
 
@@ -117,7 +117,7 @@ with tabs[0]:
         queue_df = session.sql(f"""
             SELECT QUEUE_ID, DOC_TITLE, TRIGGER_TYPE, RISK_LEVEL, STATUS,
                    AGE_DAYS, ASSIGNED_OWNER, TRIGGERING_QUERY_TEXT
-            FROM {DB_SCHEMA}.HITL_VW_REVIEW_QUEUE_PRIORITIZED
+            FROM ANALYTICS.HITL_VW_REVIEW_QUEUE_PRIORITIZED
             WHERE STATUS IN ({status_in})
               AND RISK_LEVEL IN ({risk_in})
         """).to_pandas()
@@ -153,7 +153,7 @@ with tabs[1]:
         st.warning("Select an item from the Knowledge Gap & Review Queue first.")
     else:
         detail_df = session.sql(f"""
-            SELECT * FROM {DB_SCHEMA}.HITL_VW_REVIEW_QUEUE_PRIORITIZED
+            SELECT * FROM ANALYTICS.HITL_VW_REVIEW_QUEUE_PRIORITIZED
             WHERE QUEUE_ID = ?
         """, params=[qid]).to_pandas()
         if detail_df.empty:
@@ -186,12 +186,12 @@ with tabs[1]:
                     doc_ref_key = detail.get("DOC_REF_KEY")
                     try:
                         session.sql(f"""
-                            INSERT INTO {DB_SCHEMA}.HITL_TBL_REVIEW_DECISIONS
+                            INSERT INTO CURATED.HITL_TBL_REVIEW_DECISIONS
                                 (QUEUE_ID, DOC_REF_KEY, DECISION, DECISION_NOTES)
                             VALUES (?, ?, ?, ?)
                         """, params=[qid, doc_ref_key, decision, notes]).collect()
                         session.sql(f"""
-                            UPDATE {DB_SCHEMA}.CURATED_TBL_DOCUMENTS
+                            UPDATE CURATED.CURATED_TBL_DOCUMENTS
                             SET STATUS = CASE WHEN ? = 'Retired' THEN 'Archived' ELSE STATUS END,
                                 LAST_REVIEWED_DATE = CURRENT_DATE(),
                                 NEXT_REVIEW_DATE = CASE WHEN ? != 'Retired'
@@ -200,12 +200,12 @@ with tabs[1]:
                             WHERE DOC_REF_KEY = ?
                         """, params=[decision, decision, doc_ref_key]).collect()
                         session.sql(f"""
-                            UPDATE {DB_SCHEMA}.HITL_TBL_REVIEW_QUEUE
+                            UPDATE CURATED.HITL_TBL_REVIEW_QUEUE
                             SET STATUS = 'Closed', LAST_UPDATED_AT = CURRENT_TIMESTAMP()
                             WHERE QUEUE_ID = ?
                         """, params=[qid]).collect()
                         session.sql(f"""
-                            INSERT INTO {DB_SCHEMA}.KA_ACCESS_AUDIT_LOG
+                            INSERT INTO CURATED.KA_ACCESS_AUDIT_LOG
                                 (EVENT_TYPE, REFERENCE_ID, CONTENT_DOMAIN, EVENT_DETAIL)
                             SELECT 'REVIEW_DECISION', ?, ?, PARSE_JSON(?)
                         """, params=[
@@ -234,7 +234,7 @@ if current_role in PRIVILEGED_ROLES:
                 SELECT MAX(TOTAL_OPEN_COMPLIANCE_FINDINGS) AS OPEN_FINDINGS,
                        MAX(TOTAL_FINE_EXPOSURE_USD)         AS FINE_EXPOSURE,
                        MAX(TOTAL_PROTOCOLS_OVERDUE)         AS OVERDUE_PROTOCOLS
-                FROM {DB_SCHEMA}.SV_HEALTHCARE_KNOWLEDGE_OPS
+                FROM SEMANTICS.SV_HEALTHCARE_KNOWLEDGE_OPS
             """).to_pandas().iloc[0]
             k1, k2, k3 = st.columns(3)
             k1.metric("Open Compliance Findings", int(kpis["OPEN_FINDINGS"] or 0))
@@ -245,7 +245,7 @@ if current_role in PRIVILEGED_ROLES:
         st.divider()
         st.subheader("Escalated Items")
         escalations_df = session.sql(f"""
-            SELECT * FROM {DB_SCHEMA}.HITL_VW_ESCALATIONS
+            SELECT * FROM ANALYTICS.HITL_VW_ESCALATIONS
         """).to_pandas()
         if escalations_df.empty:
             st.info("No escalated items at this time.")
@@ -262,13 +262,13 @@ if current_role in PRIVILEGED_ROLES:
             if st.button("Reassign") and reassign_qid and new_owner:
                 try:
                     session.sql(f"""
-                        UPDATE {DB_SCHEMA}.HITL_TBL_REVIEW_QUEUE
+                        UPDATE CURATED.HITL_TBL_REVIEW_QUEUE
                         SET ASSIGNED_OWNER = ?, STATUS = 'Open',
                             LAST_UPDATED_AT = CURRENT_TIMESTAMP()
                         WHERE QUEUE_ID = ?
                     """, params=[new_owner, reassign_qid]).collect()
                     session.sql(f"""
-                        INSERT INTO {DB_SCHEMA}.KA_ACCESS_AUDIT_LOG
+                        INSERT INTO CURATED.KA_ACCESS_AUDIT_LOG
                             (EVENT_TYPE, REFERENCE_ID, CONTENT_DOMAIN, EVENT_DETAIL)
                         SELECT 'REASSIGNMENT', ?, NULL, PARSE_JSON(?)
                     """, params=[
@@ -304,7 +304,7 @@ if current_role in AGENT_ROLES:
                             {"role": "assistant", "content": agent_text}
                         )
                         session.sql(f"""
-                            INSERT INTO {DB_SCHEMA}.KA_ACCESS_AUDIT_LOG
+                            INSERT INTO CURATED.KA_ACCESS_AUDIT_LOG
                                 (EVENT_TYPE, REFERENCE_ID, CONTENT_DOMAIN, EVENT_DETAIL)
                             SELECT 'QUERY_RETRIEVAL', NULL, NULL, PARSE_JSON(?)
                         """, params=[
